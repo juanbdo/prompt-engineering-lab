@@ -1,0 +1,241 @@
+[00:00:01] Carlos Andrés Pérez Ramírez:
+
+¡Buenos días, Antonio! ¿Cómo estás hoy?
+
+[00:00:05] Antonio Jesús Vanegas Luna:
+
+Muy bien, Carlos, muchas gracias. Contento de estar aquí y con ganas de conversar.
+
+[00:00:10] Carlos Andrés Pérez Ramírez:
+
+Excelente. Para ponernos en contexto, esta entrevista durará alrededor de media hora. Me gustaría profundizar en tu experiencia técnica, tus habilidades de liderazgo y tu forma de trabajar. Te iré explicando por qué pregunto cada cosa para que tengas claro lo que buscamos. ¿Te parece bien?
+
+[00:00:27] Antonio Jesús Vanegas Luna:
+
+Perfecto, me parece lo ideal.
+
+[00:00:31] Carlos Andrés Pérez Ramírez:
+
+Empecemos con tu trayectoria. Queremos un arquitecto que domine Java, por eso primero me gustaría que nos contaras, sin escatimar detalles, cuáles han sido tus principales proyectos en backend Java en los últimos diez años y qué rol jugaste en cada uno.
+
+[00:00:50] Antonio Jesús Vanegas Luna:
+
+Por supuesto. Mi primer gran reto fue en 2014 con una startup de logística. Allí desarrollamos un sistema de ruteo en Java 7 con Spring MVC y PostgreSQL. Yo era desarrollador senior y me encargaba de optimizar los algoritmos de búsqueda de rutas. En 2017 pasé a una fintech: migramos un monolito Java 6 a microservicios Spring Boot 2. Ahí ascendí a líder técnico; diseñé la estrategia de descomposición del dominio, establecí lineamientos de pruebas y definí nuestro pipeline de CI/CD con Jenkins. Desde 2021 soy arquitecto en una aseguradora: lidero un equipo de 14 personas, definí una arquitectura hexagonal y usamos Jakarta EE 10, Quarkus y Kubernetes en AWS EKS. Mi función es guiar la visión técnica y revisar todos los ADR (Architecture Decision Records).
+
+[00:02:05] Carlos Andrés Pérez Ramírez:
+
+Gracias, es justamente la profundidad que necesito. Ahora, para entender tu dominio del stack: cuando hablamos de “backend Java”, ¿qué frameworks, librerías y herramientas consideras imprescindibles hoy y por qué las eliges? Queremos comprobar tu criterio de selección tecnológica.
+
+[00:02:24] Antonio Jesús Vanegas Luna:
+
+En 2025 yo divido el stack en tres capas:  
+1. **Marco de servicio**: Spring Boot 3 o Quarkus según el caso. Spring ofrece robustez y amplio ecosistema; Quarkus da arranque rápido y menor huella para contenedores.  
+2. **Persistencia**: JPA con Hibernate sigue siendo útil; para eventos y CQRS prefiero Axon. Si necesitamos NoSQL, uso MongoDB 4.4+ o DynamoDB; para grafos, Neo4j.  
+3. **Infraestructura y operabilidad**: Docker Compose para entornos locales, Kubernetes para producción. Observabilidad con Micrometer + Prometheus + Grafana. Seguridad con Spring Security 6, OPA y OAuth 2 usando Keycloak.  
+
+Estas elecciones balancean comunidad, madurez y facilidad de mantenimiento.
+
+[00:03:24] Carlos Andrés Pérez Ramírez:
+
+Perfecto. Antes de avanzar: muchas compañías aseguran usar “microservicios”, pero no siempre aplican principios de diseño adecuados. Te pediré que describas —con ejemplos concretos— un patrón de integración que hayas usado para orquestar o coreografiar servicios, qué problema resolvía y cómo mediste su eficacia.
+
+[00:03:48] Antonio Jesús Vanegas Luna:
+
+Un caso representativo fue la adopción del **patrón Saga** orquestado con Camunda BPMN en la fintech. Teníamos transacciones distribuidas que abarcaban tres servicios: pagos, inventario y notificaciones. Implementamos orquestación con un motor central que enviaba comandos; los servicios publicaban eventos de finalización. El principal problema era la compensación de fallos—cuando inventario fallaba, el pago ya estaba capturado. Con la Saga orquestada logramos rollback lógicamente idempotente. Medimos la eficacia en dos métricas:  
+- Tasa de transacciones inconsistentes (bajó de 0.7 % a 0.05 %).  
+- Latencia total (aumentó solo 40 ms en P95, dentro del SLA de 200 ms).  
+
+En otro proyecto apliqué **coreografía** basada en eventos con Kafka, usando el patrón Outbox y Debezium como CDC. Ideal para alta resiliencia, pero requiere más gobernanza en el esquema de eventos.
+
+[00:05:15] Carlos Andrés Pérez Ramírez:
+
+Muy claro. Pasemos a metodologías ágiles. No buscamos solo la etiqueta “Scrum”, sino entender cómo facilitas la entrega de valor y la mejora continua. Te pediré que describas: (a) tu rutina de sprint típica, (b) cómo gestionas la deuda técnica y (c) un ejemplo de retroalimentación de equipo que condujo a un cambio concreto en el proceso.
+
+[00:05:40] Antonio Jesús Vanegas Luna:
+
+(a) Sprint típico: dos semanas. Día 0, planning; definimos objetivos y capacity. Daily de 15 min. Día 8, refinamiento; usamos Definition of Ready. Día 9, review y retro.  
+(b) Deuda técnica: mantenemos un tablero en Jira con historias técnicas. Cada sprint destinamos 15 % del capacity a Reducir Deuda. Además, evaluamos tech debt en release burndowns.  
+(c) Retro ejemplo: el equipo expresó frustración por la longitud de las PR. Decidimos instaurar “Trunk-based development” con feature toggles y CI que obliga a merge cada 48 h. Resultado: el lead time de cambios bajó de 4 días a 1.2 días y el volumen de conflictos se redujo 60 %.
+
+[00:06:57] Carlos Andrés Pérez Ramírez:
+
+Perfecto. Ahora quiero ahondar en pruebas. Necesitamos alguien que impulse la calidad desde la arquitectura. Describe tu pirámide de pruebas ideal para microservicios Java, qué herramientas empleas en cada nivel y cómo automatizas la ejecución en el pipeline.
+
+[00:07:19] Antonio Jesús Vanegas Luna:
+
+Mi pirámide recomendada:  
+- **Pruebas unitarias** (70 %): JUnit 5, Mockito + PowerMock cuando es estrictamente necesario. Tiempo < 200 ms por prueba.  
+- **Pruebas de capa** / componentes (15 %): Spring Test con context slicing y Testcontainers para bases de datos efímeras.  
+- **Contratos** (5 %): Pact Broker para consumidor-proveedor, validado en CI.  
+- **End-to-end** (5 %): Cypress o Playwright para UI, más RestAssured para APIs.  
+- **Performance** (5 %): Gatling en staging nightly.  
+
+El pipeline en Jenkins o GitHub Actions ejecuta unitarias en cada commit, capa y contratos en build nightly, e2e y performance en cron jobs y antes de release.
+
+[00:08:28] Carlos Andrés Pérez Ramírez:
+
+Interesante. Hablando de pipelines, ¿cómo configuras la seguridad del supply chain? Buscamos buenas prácticas de DevSecOps para prevenir vulnerabilidades.
+
+[00:08:40] Antonio Jesús Vanegas Luna:
+
+Integro escáneres de dependencias con OWASP Dependency-Check y Snyk en el stage “análisis estático”. Uso SonarQube para code smells. Para contenedores, Trivy revisa capas. Defino políticas de “disallow” en JFrog Xray y firmo imágenes con Cosign y Notary v2. Además, empleamos GitHub Dependabot para actualizaciones automáticas y escaneo de secretos con Gitleaks.
+
+[00:09:28] Carlos Andrés Pérez Ramírez:
+
+Me gusta la profundidad. Ahora quiero comprobar tu capacidad de articular trade-offs. ¿Puedes citar una decisión arquitectónica polémica que hayas tomado, por qué la defendiste y qué resultados produjo?
+
+[00:09:45] Antonio Jesús Vanegas Luna:
+
+En 2022 en la aseguradora opté por **event sourcing** para la gestión de pólizas. Algunos veían excesiva complejidad. Mi argumento: requeríamos historial completo para auditorías reguladas y flexibilidad para reconstruir vistas. Decidimos usar Axon Server. Trade-offs: curva de aprendizaje y aumento de almacenamiento (15 % más). Beneficio: auditorías automáticas y capacidad de “time-travel debugging”. El regulador destacó la trazabilidad y redujimos 30 % el tiempo de investigación de incidencias críticas.
+
+[00:11:02] Carlos Andrés Pérez Ramírez:
+
+Gracias. Volvamos a las capacidades de liderazgo. ¿Cómo fomentas la autonomía del equipo y, al mismo tiempo, aseguras la coherencia arquitectónica?
+
+[00:11:14] Antonio Jesús Vanegas Luna:
+
+Primero, defino **guías evolutivas**: un repo de “Architectural Playbook” con ADRs, estándares de código y ejemplos. Luego, delego ownership por dominio; cada squad tiene un “Tech Champion”. Mantenemos una reunión semanal de “Architecture Chapter” donde presentamos cambios y debatimos. Así logramos coherencia sin micro-gestión. Uso métricas DORA y “quality gates” para feedback continuo.
+
+[00:12:10] Carlos Andrés Pérez Ramírez:
+
+Excelente. Para comprobar tu capacidad pedagógica, explícame a un nivel entendible para un gerente no técnico qué es la arquitectura hexagonal y por qué beneficia a nuestra empresa.
+
+[00:12:25] Antonio Jesús Vanegas Luna:
+
+La arquitectura hexagonal separa el núcleo de negocio —las reglas que dan valor— de los detalles externos —bases de datos, APIs, interfaces de usuario— mediante “puertos” y “adaptadores”. Imagina un enchufe universal: puedes cambiar la corriente sin tocar el aparato. Esto facilita pruebas aisladas, evita dependencias rígidas y permite que la empresa cambie de proveedor tecnológico o migrar a la nube sin reescribir el negocio.
+
+[00:13:14] Carlos Andrés Pérez Ramírez:
+
+Muy claro. Sigamos con cloud. Indícanos tu nivel de experiencia en AWS, Azure o GCP y en qué servicios te consideras más fuerte.
+
+[00:13:26] Antonio Jesús Vanegas Luna:
+
+Principalmente AWS: EKS, RDS, DynamoDB y Lambda. Manejo Terraform y AWS CDK. En GCP he usado Cloud Run y BigQuery para analítica. Azure lo conozco superficialmente —solo he desplegado apps en App Service. Me siento fuerte en networking (VPC, ALB, NLB), IAM y observabilidad con CloudWatch, además de cost-optimization usando Savings Plans.
+
+[00:14:20] Carlos Andrés Pérez Ramírez:
+
+Hablemos de incidentes. Describe el peor incidente de producción que viviste, cómo lo manejaste y qué acciones correctivas implementaste.
+
+[00:14:32] Antonio Jesús Vanegas Luna:
+
+En 2023, falla en e-commerce: los pagos se duplicaban. Identificamos un bug en el mecanismo de reintentos cuando Kafka se quedaba sin cuota. Detuvimos el servicio de pagos en canary, avisamos por StatusPage y empezamos un rollback. Para corrección: implementamos idempotency keys, monitor duplicados y límites de cuota en Kubernetes. Después adoptamos circuit breakers con Resilience4j y pruebas de caos mensuales. El SLA de pagos volvió al 99.98 % en 48 h.
+
+[00:15:35] Carlos Andrés Pérez Ramírez:
+
+Muy bien. Quiero abrir un bloque sobre soft skills. A veces, el mayor reto no es el código, sino la comunicación. Dame un ejemplo donde hayas gestionado un conflicto entre dos desarrolladores sénior.
+
+[00:15:49] Antonio Jesús Vanegas Luna:
+
+En 2022, dos seniors discrepaban sobre GraphQL vs REST. Organicé una sesión de “Architecture Spike”: cada uno preparó un PoC con criterios de evaluación acordados. Como facilitador, promoví escucha activa y recordé el objetivo de negocio. El PoC mostró que GraphQL no añadía valor para el caso, así que consensuamos REST. Ambos valoraron el proceso y la tensión cesó.
+
+[00:16:40] Carlos Andrés Pérez Ramírez:
+
+Perfecto. Ahora un breve ejercicio: si te suelto el concepto “Domain-Driven Design”, ¿qué significa para ti y cómo lo aplicarías al dominio de seguros de salud?
+
+[00:16:55] Antonio Jesús Vanegas Luna:
+
+DDD implica modelar el software según el lenguaje ubiquo del negocio. Para salud, definimos “Bounded Contexts” como: Clientes, Pólizas, Reembolsos y Reclamaciones. Cada contexto tiene su propio modelo y base de datos. El equipo de Pólizas habla de “Prima”, “Beneficiario” y “Cobertura” usando definiciones exactas. Usamos eventos de dominio para comunicar cambios, evitando acoplamiento entre contextos. Así el sistema refleja fielmente el negocio y resiste cambios regulatorios.
+
+[00:18:08] Carlos Andrés Pérez Ramírez:
+
+Para cerrar la parte técnica, ¿háblame de algo que NO sabes pero consideras importante aprender en el próximo año?
+
+[00:18:17] Antonio Jesús Vanegas Luna:
+
+Me interesa profundizar en **eBPF** para observabilidad y seguridad a nivel kernel en Kubernetes. Sé los conceptos básicos, pero quiero dominar herramientas como Cilium y Pixie para trazas sin sidecars.
+
+[00:18:40] Carlos Andrés Pérez Ramírez:
+
+Aprecio tu honestidad. Pasemos a tus proyectos previos: ¿podrías enumerar las empresas y roles que has tenido, indicando duración y logro principal en cada una?
+
+[00:18:52] Antonio Jesús Vanegas Luna:
+
+- **2012-2014** – SofLogix (Colombia): Dev Java, optimicé ruteo 20 %.  
+- **2014-2017** – BlueRoutes (México): Senior Dev, migré a Spring Boot; reducción 30 % latencia.  
+- **2017-2021** – PayGo Fintech (Chile): Lead Tech, microservicios; TTM de features bajó 40 %.  
+- **2021-Hoy** – Andes Insurance (Remoto): Arquitecto, hexagonal + AWS; certificación ISO 27001, cero findings críticos.
+
+[00:19:43] Carlos Andrés Pérez Ramírez:
+
+Muy bien. Ahora un pequeño test de humildad: descríbeme un error tuyo que te haya enseñado algo valioso.
+
+[00:19:52] Antonio Jesús Vanegas Luna:
+
+En 2018 asumí que todos entendían los ADRs que escribía. Usé jerga excesiva y media compañía no los leía. Resultado: implementaciones incoherentes. Aprendí a escribir documentos de una página, con lenguaje claro y ejemplos visuales. Desde entonces, la adopción de ADRs supera 90 %.
+
+[00:20:35] Carlos Andrés Pérez Ramírez:
+
+Qué buen aprendizaje. Vamos a cambiar de ritmo: imagina que te damos un equipo de ocho personas, tres son juniors. ¿Cómo acelerarías su curva de aprendizaje en Java y arquitectura?
+
+[00:20:49] Antonio Jesús Vanegas Luna:
+
+Diseñaría un **programa “Bootcamp Interno”** de seis semanas:  
+1. Semana 1-2: fundamentos Java 17, TDD; ejercicios kata.  
+2. Semana 3-4: Spring Boot + pruebas; pair programming con seniors.  
+3. Semana 5: DOJO de microservicios; implementan servicio trivial y lo despliegan en Kubernetes.  
+4. Semana 6: presentan lecciones aprendidas y reciben feedback 360.  
+Complemento con mentoring 1-a-1, checklist de competencias y revisiones de código empáticas.
+
+[00:22:05] Carlos Andrés Pérez Ramírez:
+
+Suena sólido. Antes de concluir, permíteme preguntarte algo más personal: ¿qué te motiva a largo plazo y cómo alinea eso con lo que ofrece nuestra compañía?
+
+[00:22:18] Antonio Jesús Vanegas Luna:
+
+Me motivan los retos que combinan impacto social y tecnología bien hecha. Su empresa desarrolla soluciones para banca inclusiva en Latinoamérica, lo cual concuerda con mi meta de mejorar servicios financieros. Además, valoro la cultura de innovación continua que he investigado sobre ustedes.
+
+[00:22:48] Carlos Andrés Pérez Ramírez:
+
+Ahora te cedo la palabra: ¿qué dudas tienes sobre el puesto o la compañía?
+
+[00:22:54] Antonio Jesús Vanegas Luna:
+
+Me gustaría saber cómo miden el éxito de la arquitectura y qué autonomía tendría para proponer cambios.
+
+[00:23:04] Carlos Andrés Pérez Ramírez:
+
+Medimos con OKRs técnicos (p. ej., métricas DORA, error budgets) alineados a OKRs de negocio. Como arquitecto, tendrás autoridad sobre las decisiones técnicas del dominio, siempre respaldadas con ADR y en consenso con el comité de arquitectura.
+
+[00:23:28] Antonio Jesús Vanegas Luna:
+
+Perfecto, eso me da claridad.
+
+[00:23:32] Carlos Andrés Pérez Ramírez:
+
+Otra pregunta frecuente de candidatos: ¿Cómo es la política de trabajo remoto y desarrollo profesional?
+
+[00:23:40] Antonio Jesús Vanegas Luna:
+
+Sí, me interesa bastante.
+
+[00:23:42] Carlos Andrés Pérez Ramírez:
+
+Tenemos modalidad híbrida: tres días remotos, dos en oficina en Bogotá o Medellín. Ofrecemos presupuesto anual de formación y un programa de certificaciones pagadas. Además, hay rotación interna de proyectos cada 18 meses.
+
+[00:24:05] Antonio Jesús Vanegas Luna:
+
+Suena muy alineado con lo que busco.
+
+[00:24:10] Carlos Andrés Pérez Ramírez:
+
+Bien, Antonio, vamos cerrando. Quiero agradecer tu tiempo y la profundidad de tus respuestas. ¿Te gustaría agregar algo que no hayamos cubierto?
+
+[00:24:22] Antonio Jesús Vanegas Luna:
+
+Solo añadir que disfruto la docencia: imparto talleres de Clean Code. Si es útil, puedo organizar sesiones internas para el equipo.
+
+[00:24:34] Carlos Andrés Pérez Ramírez:
+
+Excelente, apreciamos esa iniciativa. Próximos pasos: evaluaremos a todos los candidatos esta semana y, de ser seleccionado, pasarías a una entrevista técnica con nuestro CTO, enfocada en un caso práctico. Esperamos comunicar resultados antes del 8 de agosto.
+
+[00:24:55] Antonio Jesús Vanegas Luna:
+
+Muchas gracias, estaré pendiente.
+
+[00:24:59] Carlos Andrés Pérez Ramírez:
+
+Antonio, que tengas un excelente día. ¡Hasta pronto!
+
+[00:25:03] Antonio Jesús Vanegas Luna:
+
+Igualmente, Carlos. ¡Hasta luego!
